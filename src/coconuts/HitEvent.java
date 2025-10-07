@@ -10,4 +10,5 @@ import java.util.LinkedList;
 //   to process that event
 // This is a domain class; do not introduce JavaFX or other GUI components here
 public class HitEvent {
+    //idfk whats going on
 }
