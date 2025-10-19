@@ -16,4 +16,46 @@ public class Coconut extends HittableIslandObject {
     public void step() {
         y += 5;
     }
+
+    @Override
+    public boolean canHit(IslandObject other) {
+        // Coconuts can hit crabs and beaches
+        return other.isCrab() || other.isBeach();
+    }
+
+    @Override
+    public boolean isCoconut() {
+        return true;
+    }
+
+    @Override
+    public boolean isTouching(IslandObject other) {
+        if (other.isCrab()) {
+            // Check if the bottom of the coconut is touching the top of the crab
+            // and if the coconut's center is between the crab's left and right edges
+            int coconutBottom = y + WIDTH;
+            int crabTop = other.y;
+            int coconutCenter = x + WIDTH / 2;
+            int crabLeft = other.x;
+            int crabRight = other.x + other.width;
+
+            return coconutBottom >= crabTop &&
+                   coconutCenter >= crabLeft &&
+                   coconutCenter <= crabRight;
+        } else if (other.isBeach()) {
+            // Check if the bottom of the coconut is touching the beach
+            // The beach is at the bottom of the game area
+            int coconutBottom = y + WIDTH;
+            int gameHeight = containingGame.getHeight();
+
+            return coconutBottom >= gameHeight;
+        }
+
+        return false;
+    }
+
+    @Override
+    public boolean isFalling() {
+        return true;
+    }
 }

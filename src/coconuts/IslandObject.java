@@ -61,5 +61,22 @@ public abstract class IslandObject {
         return false;
     }
 
+    // Type identification methods to replace instanceof
+    public boolean isCoconut() {
+        return false;
+    }
+
+    public boolean isCrab() {
+        return false;
+    }
+
+    public boolean isBeach() {
+        return false;
+    }
+
+    public boolean isLaserBeam() {
+        return false;
+    }
+
     public abstract void step();
 }

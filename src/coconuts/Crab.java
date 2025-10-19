@@ -29,4 +29,9 @@ public class Crab extends HittableIslandObject {
         }
         display();
     }
+
+    @Override
+    public boolean isCrab() {
+        return true;
+    }
 }
