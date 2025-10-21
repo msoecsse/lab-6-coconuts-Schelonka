@@ -51,7 +51,7 @@ public class Coconut extends HittableIslandObject {
             int coconutBottom = y + WIDTH;
             int gameHeight = containingGame.getHeight();
 
-            return coconutBottom >= gameHeight;
+            return coconutBottom >= gameHeight + 50;
         }
         return false;
     }
