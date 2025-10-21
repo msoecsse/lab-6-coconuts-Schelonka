@@ -20,7 +20,7 @@ public class Coconut extends HittableIslandObject {
     @Override
     public boolean canHit(IslandObject other) {
         // Coconuts can hit crabs and beaches
-        return other.isCrab() || other.isBeach();
+        return other.isCrab() || other.isBeach() || other.isLaserBeam();
     }
 
     @Override
@@ -30,6 +30,9 @@ public class Coconut extends HittableIslandObject {
 
     @Override
     public boolean isTouching(IslandObject other) {
+        if (other.isLaserBeam()) {
+            return true;
+        }
         if (other.isCrab()) {
             // Check if the bottom of the coconut is touching the top of the crab
             // and if the coconut's center is between the crab's left and right edges
@@ -50,7 +53,6 @@ public class Coconut extends HittableIslandObject {
 
             return coconutBottom >= gameHeight;
         }
-
         return false;
     }
 

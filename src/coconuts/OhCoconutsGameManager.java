@@ -8,7 +8,9 @@ import java.util.Collection;
 import java.util.LinkedList;
 
 // This class manages the game, including tracking all island objects and detecting when they hit
-public class OhCoconutsGameManager {
+public class OhCoconutsGameManager implements Subject {
+    private final Collection<HitObserver> observers = new LinkedList<>();
+
     private final Collection<IslandObject> allObjects = new LinkedList<>();
     private final Collection<HittableIslandObject> hittableIslandSubjects = new LinkedList<>();
     private final Collection<IslandObject> scheduledForRemoval = new LinkedList<>();
@@ -26,6 +28,8 @@ public class OhCoconutsGameManager {
         this.height = height;
         this.width = width;
         this.gamePane = gamePane;
+        attach(new CollisionObserver(this));
+
 
         this.theCrab = new Crab(this, height, width);
         registerObject(theCrab);
@@ -88,41 +92,61 @@ public class OhCoconutsGameManager {
         scheduledForRemoval.clear();
         for (IslandObject thisObj : allObjects) {
             for (HittableIslandObject hittableObject : hittableIslandSubjects) {
+
                 if (thisObj.canHit(hittableObject) && thisObj.isTouching(hittableObject)) {
-                    // Check if this is a laser hitting a coconut
-                    if (thisObj.isLaserBeam() && hittableObject.isCoconut()) {
-                        if (gameController != null) {
-                            gameController.incrementCoconutsDestroyed();
-                        }
+                    String eventType = "";
+
+                    if (thisObj.isLaserBeam() && hittableObject.isCoconut())
+                        eventType = "COCONUT_DESTROYED";
+                    else if (thisObj.isCoconut() && hittableObject.isCrab())
+                        eventType = "CRAB_HIT";
+                    else if (thisObj.isCoconut() && hittableObject.isBeach())
+                        eventType = "COCONUT_HIT_BEACH";
+
+                    if (!eventType.isEmpty()) {
+                        HitEvent event = new HitEvent(thisObj, hittableObject, eventType);
+                        notifyAll(event);
                     }
-                    // Check if this is a coconut hitting the crab, end the game
-                    else if (thisObj.isCoconut() && hittableObject.isCrab()) {
-                        killCrab(); // This will end the game
-                        return; // Exit immediately to stop game processing
-                    }
-                    // Check if this is a coconut hitting the beach, increment beach hit counter
-                    else if (thisObj.isCoconut() && hittableObject.isBeach()) {
-                        if (gameController != null) {
-                            gameController.incrementCoconutsHitBeach();
-                        }
-                        // Remove the coconut, not the beach
-                        scheduledForRemoval.add(thisObj);
-                        gamePane.getChildren().remove(thisObj.getImageView());
-                        continue; // Skip the general removal logic below
-                    }
-                    scheduledForRemoval.add(hittableObject);
-                    gamePane.getChildren().remove(hittableObject.getImageView());
+//                    hittableIslandSubjects.remove(hittableObject);
+//
+//                    // Check if this is a laser hitting a coconut
+//                    if (gameController != null) {
+//                            gameController.incrementCoconutsDestroyed();
+//                    }
+////                    }
+//                    // Check if this is a coconut hitting the crab, end the game
+//                    if (thisObj.isCoconut() && hittableObject.isCrab()) {
+//                        killCrab(); // This will end the game
+//                        return; // Exit immediately to stop game processing
+//                    }
+//                    // Check if this is a coconut hitting the beach, increment beach hit counter
+//                    else if (thisObj.isCoconut() && hittableObject.isBeach()) {
+//                        if (gameController != null) {
+//                            gameController.incrementCoconutsHitBeach();
+//                        }
+//                        // Remove the coconut, not the beach
+//                        scheduledForRemoval.add(thisObj);
+//                        gamePane.getChildren().remove(thisObj.getImageView());
+//                        continue; // Skip the general removal logic below
+//                    }
+//                    scheduledForRemoval.add(hittableObject);
+//                    gamePane.getChildren().remove(hittableObject.getImageView());
                 }
             }
         }
         // actually remove the objects as needed
-        for (IslandObject thisObj : scheduledForRemoval) {
-            allObjects.remove(thisObj);
-            if (thisObj.isHittable()) {
-                hittableIslandSubjects.remove((HittableIslandObject) thisObj);
-            }
-        }
-        scheduledForRemoval.clear();
+//        for (IslandObject thisObj : scheduledForRemoval) {
+//            removeObject(thisObj);
+//        }
+//        scheduledForRemoval.clear();
+    }
+
+
+
+    public void makeLaser() {
+        LaserBeam laser = new LaserBeam(this, theCrab.y, theCrab.x + 25);
+        registerObject(laser);
+        gamePane.getChildren().add(laser.getImageView());
     }
 
 
@@ -130,4 +154,29 @@ public class OhCoconutsGameManager {
         // Game ends if crab is killed or if all coconuts are gone and max time reached
         return theCrab == null || (coconutsInFlight == 0 && gameTick >= MAX_TIME);
     }
+
+    public void removeObject(IslandObject obj) {
+        allObjects.remove(obj);
+        if (obj.isHittable()) hittableIslandSubjects.remove(obj);
+        gamePane.getChildren().remove(obj.getImageView());
+    }
+
+
+    @Override
+    public void attach(HitObserver observer) {
+        observers.add(observer);
+    }
+
+    @Override
+    public void detach(HitObserver observer) {
+        observers.remove(observer);
+    }
+
+    @Override
+    public void notifyAll(HitEvent event) {
+        for (HitObserver server: observers) {
+            server.update(event);
+        }
+    }
+
 }

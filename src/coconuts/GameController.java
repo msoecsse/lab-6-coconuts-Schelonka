@@ -20,16 +20,16 @@ public class GameController {
     private Timeline coconutTimeline;
     private Timeline scoreboardTimeline;
     private boolean started = false;
-    private long gameStartTime;
-    private int coconutsDestroyedByLaser = 0;
-    private int coconutsHitBeach = 0;
+    private Scoreboard scoreboard;
+    private ScoreboardObserver scoreboardObserver;
+    private boolean running = false;
 
     @FXML
     private Pane gamePane;
     @FXML
     private Pane theBeach;
-    @FXML
-    private HBox scoreboard;
+//    @FXML
+//    private HBox scoreboard;
     @FXML
     private Label timeLabel;
     @FXML
@@ -61,25 +61,45 @@ public class GameController {
             updateScoreboard();
         }));
         scoreboardTimeline.setCycleCount(Timeline.INDEFINITE);
+        scoreboard = new Scoreboard();
+        scoreboardObserver = new ScoreboardObserver(scoreboard);
+        theGame.attach(scoreboardObserver);
     }
 
     @FXML
     public void onKeyPressed(KeyEvent keyEvent) {
         if (keyEvent.getCode() == KeyCode.RIGHT && !theGame.done()) {
-            theGame.getCrab().crawl(10);
-        } else if (keyEvent.getCode() == KeyCode.LEFT && !theGame.done()) {
-            theGame.getCrab().crawl(-10);
-        } else if (keyEvent.getCode() == KeyCode.SPACE) {
-            if (!started) {
-                gameStartTime = System.currentTimeMillis();
-                coconutTimeline.play();
-                scoreboardTimeline.play();
-                started = true;
-            } else {
-                coconutTimeline.pause();
-                scoreboardTimeline.pause();
-                started = false;
+            if (running) {
+                theGame.getCrab().crawl(10);
             }
+        } else if (keyEvent.getCode() == KeyCode.LEFT && !theGame.done()) {
+            if (running) {
+                theGame.getCrab().crawl(-10);
+            }
+        } else if (keyEvent.getCode() == KeyCode.UP) {
+            theGame.makeLaser();
+        } else if (keyEvent.getCode() == KeyCode.SPACE) {
+            toggleStart();
+        }
+    }
+
+    private void toggleStart() {
+        if (!started) {
+            scoreboard.start();
+            started = true;
+        }
+        if (!running) {
+
+            scoreboard.resume();
+            coconutTimeline.play();
+            scoreboardTimeline.play();
+            running = true;
+        } else {
+
+            scoreboard.pause();
+            coconutTimeline.pause();
+            scoreboardTimeline.pause();
+            running = false;
         }
     }
 
@@ -87,26 +107,21 @@ public class GameController {
      * Updates the scoreboard display with current time and coconut destruction count
      */
     private void updateScoreboard() {
-        if (started) {
-            long currentTime = System.currentTimeMillis();
-            double elapsedSeconds = (currentTime - gameStartTime) / 1000.0;
-            timeLabel.setText(String.format("Time: %.1fs", elapsedSeconds));
+        if (running) {
+            timeLabel.setText(String.format("Time: %ds", scoreboard.getTime()));
         }
-        coconutsDestroyedLabel.setText("Coconuts Destroyed: " + coconutsDestroyedByLaser);
-        coconutsHitBeachLabel.setText("Coconuts Hit Beach: " + coconutsHitBeach);
+        coconutsDestroyedLabel.setText("Coconuts Destroyed: " + scoreboard.getCoconutsDestroyedByLaser());
+        coconutsHitBeachLabel.setText("Coconuts Hit Beach: " + scoreboard.getCoconutsHitBeach());
     }
 
     /**
      * Increments the count of coconuts destroyed by laser
      */
-    public void incrementCoconutsDestroyed() {
-        coconutsDestroyedByLaser++;
-    }
+
 
     /**
      * Increments the count of coconuts that hit the beach
      */
-    public void incrementCoconutsHitBeach() {
-        coconutsHitBeach++;
-    }
+
+
 }
