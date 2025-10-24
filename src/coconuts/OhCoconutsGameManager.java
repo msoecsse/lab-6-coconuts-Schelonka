@@ -81,10 +81,12 @@ public class OhCoconutsGameManager implements Subject {
     }
 
     public void killCrab() {
+        gamePane.getChildren().remove(theCrab.getImageView());
         theCrab = null;
     }
 
     public void advanceOneTick() {
+        boolean check = true;
         for (IslandObject o : allObjects) {
             o.step();
             o.display();
@@ -96,49 +98,26 @@ public class OhCoconutsGameManager implements Subject {
                 if (thisObj.canHit(hittableObject) && thisObj.isTouching(hittableObject)) {
                     String eventType = "";
 
-                    if (thisObj.isLaserBeam() && hittableObject.isCoconut())
+                    if (thisObj.isLaserBeam() && hittableObject.isCoconut() && check) {
                         eventType = "COCONUT_DESTROYED";
-                    else if (thisObj.isCoconut() && hittableObject.isCrab())
-                        eventType = "CRAB_HIT";
-                    else if (thisObj.isCoconut() && hittableObject.isBeach())
-                        eventType = "COCONUT_HIT_BEACH";
+                        check = false;
+                    }
+                    else if (thisObj.isCoconut() && hittableObject.isCrab()) {
 
+                        eventType = "CRAB_HIT";
+                    }
+                    else if (thisObj.isCoconut() && hittableObject.isBeach()) {
+                    eventType = "COCONUT_HIT_BEACH";
+                    }
                     if (!eventType.isEmpty()) {
                         HitEvent event = new HitEvent(thisObj, hittableObject, eventType);
                         notifyAll(event);
                     }
-//                    hittableIslandSubjects.remove(hittableObject);
-//
-//                    // Check if this is a laser hitting a coconut
-//                    if (gameController != null) {
-//                            gameController.incrementCoconutsDestroyed();
-//                    }
-////                    }
-//                    // Check if this is a coconut hitting the crab, end the game
-//                    if (thisObj.isCoconut() && hittableObject.isCrab()) {
-//                        killCrab(); // This will end the game
-//                        return; // Exit immediately to stop game processing
-//                    }
-//                    // Check if this is a coconut hitting the beach, increment beach hit counter
-//                    else if (thisObj.isCoconut() && hittableObject.isBeach()) {
-//                        if (gameController != null) {
-//                            gameController.incrementCoconutsHitBeach();
-//                        }
-//                        // Remove the coconut, not the beach
-//                        scheduledForRemoval.add(thisObj);
-//                        gamePane.getChildren().remove(thisObj.getImageView());
-//                        continue; // Skip the general removal logic below
-//                    }
-//                    scheduledForRemoval.add(hittableObject);
-//                    gamePane.getChildren().remove(hittableObject.getImageView());
+
                 }
             }
         }
-        // actually remove the objects as needed
-//        for (IslandObject thisObj : scheduledForRemoval) {
-//            removeObject(thisObj);
-//        }
-//        scheduledForRemoval.clear();
+
     }
 
 
